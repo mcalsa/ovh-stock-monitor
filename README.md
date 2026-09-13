@@ -1,0 +1,1 @@
+# ovh-stock-monitor
