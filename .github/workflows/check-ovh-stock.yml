@@ -1,9 +1,14 @@
-name: Check OVH VPS stock
+name: Check OVH VPS stock (Francia)
 
 on:
   schedule:
     - cron: "2-57/5 * * * *"
   workflow_dispatch:
+    inputs:
+      confirm_startup:
+        description: "Forzar mensaje de confirmacion (bot vivo) aunque no haya stock nuevo"
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -17,15 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      OVH_API_URL: https://ca.api.ovh.com/v1/vps/order/rule/datacenter
+      OVH_API_URL: https://eu.api.ovh.com/v1/vps/order/rule/datacenter
       OVH_SUBSIDIARY: WE
-      OVH_PLAN_CODE: vps-2027-model2
-      OVH_PLAN_LABEL: VPS Model 2
-      OVH_OS: Ubuntu 25.04
-      OVH_DATACENTER: DE
-      OVH_LOCATION_CODE: eu-west-lim
-      OVH_LOCATION_LABEL: Germany - Limburg
-      OVH_CONFIGURATOR_URL: https://www.ovhcloud.com/en/vps/configurator/?planCode=vps-2027-model2.LZ&brick=VPS%2BModel%2B2&pricing=upfront12&processor=%20&vcore=4__vCore&storage=75__SSD__NVMe
+      OVH_PLAN_CODES: vps-2027-model2,vps-2027-model3,vps-2027-model4
+      OVH_TARGET_DATACENTERS: GRA,SBG,EU-WEST-RBX
+      OVH_CONFIGURATOR_URL_TEMPLATE: "https://www.ovhcloud.com/es-es/vps/configurator/?planCode={plan}.LZ&brick=VPS%2BModel%2B2&pricing=upfront12&processor=%20&vcore=4__vCore&storage=75__SSD__NVMe"
+      OVH_FORCE_STARTUP_MESSAGE: ${{ github.event.inputs.confirm_startup || 'false' }}
       STATE_FILE: .state/ovh-stock.json
 
     steps:
@@ -39,7 +41,7 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: python -m pip install --requirement requirements.txt
+        run: python -m pip install requests
 
       - name: Restore stock state
         uses: actions/cache/restore@v6
